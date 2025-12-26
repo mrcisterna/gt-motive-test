@@ -26,13 +26,28 @@ var builder = WebApplication.CreateBuilder();
 // Configuration.
 if (!builder.Environment.IsDevelopment())
 {
-    builder.Configuration.AddJsonFile("serilogsettings.json", optional: false, reloadOnChange: true);
+    builder.Configuration.AddJsonFile("serilogsettings.json", optional: true, reloadOnChange: true);
 
-    var secretClient = new SecretClient(
-        new Uri($"https://{builder.Configuration.GetValue<string>("KeyVaultName")}.vault.azure.net/"),
-        new DefaultAzureCredential());
+    var keyVaultName = builder.Configuration.GetValue<string>("KeyVaultName");
+    if (!string.IsNullOrEmpty(keyVaultName))
+    {
+        try
+        {
+            var secretClient = new SecretClient(
+                new Uri($"https://{keyVaultName}.vault.azure.net/"),
+                new DefaultAzureCredential());
 
-    builder.Configuration.AddAzureKeyVault(secretClient, new KeyVaultSecretManager());
+            builder.Configuration.AddAzureKeyVault(secretClient, new KeyVaultSecretManager());
+        }
+        catch (AuthenticationFailedException ex)
+        {
+            Console.WriteLine($"Warning: Could not connect to KeyVault: {ex.Message}");
+        }
+        catch (Azure.RequestFailedException ex)
+        {
+            Console.WriteLine($"Warning: Could not connect to KeyVault: {ex.Message}");
+        }
+    }
 }
 
 // Logging configuration for host bootstrapping.
@@ -60,6 +75,13 @@ builder.Services.AddSwaggerGen();
 var appSettingsSection = builder.Configuration.GetSection("AppSettings");
 builder.Services.Configure<AppSettings>(appSettingsSection);
 var appSettings = appSettingsSection.Get<AppSettings>();
+
+// Provide default values for development
+appSettings ??= new AppSettings
+{
+    JwtAuthority = builder.Configuration.GetValue<string>("JwtAuthority") ?? "http://localhost:5000"
+};
+
 builder.Services.Configure<MongoDbSettings>(builder.Configuration.GetSection("MongoDb"));
 
 builder.Services.AddControllers(ApiConfiguration.ConfigureControllers)
