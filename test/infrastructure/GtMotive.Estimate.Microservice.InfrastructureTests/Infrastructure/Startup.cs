@@ -36,7 +36,7 @@ namespace GtMotive.Estimate.Microservice.InfrastructureTests.Infrastructure
             services.AddAuthentication(TestServerDefaults.AuthenticationScheme)
                 .AddTestServer();
 
-            services.AddControllers(ApiConfiguration.ConfigureControllers)
+            services.AddControllers()
                 .WithApiControllers();
 
             services.AddBaseInfrastructure(true);
