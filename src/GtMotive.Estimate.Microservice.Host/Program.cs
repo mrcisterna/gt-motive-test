@@ -39,13 +39,13 @@ if (!builder.Environment.IsDevelopment())
 
             builder.Configuration.AddAzureKeyVault(secretClient, new KeyVaultSecretManager());
         }
-        catch (AuthenticationFailedException ex)
+        catch (AuthenticationFailedException)
         {
-            Console.WriteLine($"Warning: Could not connect to KeyVault: {ex.Message}");
+            // KeyVault not available
         }
-        catch (Azure.RequestFailedException ex)
+        catch (Azure.RequestFailedException)
         {
-            Console.WriteLine($"Warning: Could not connect to KeyVault: {ex.Message}");
+            // KeyVault not available
         }
     }
 }
@@ -74,12 +74,9 @@ builder.Services.AddSwaggerGen();
 
 var appSettingsSection = builder.Configuration.GetSection("AppSettings");
 builder.Services.Configure<AppSettings>(appSettingsSection);
-var appSettings = appSettingsSection.Get<AppSettings>();
-
-// Provide default values for development
-appSettings ??= new AppSettings
+var appSettings = appSettingsSection.Get<AppSettings>() ?? new AppSettings
 {
-    JwtAuthority = builder.Configuration.GetValue<string>("JwtAuthority") ?? "http://localhost:5000"
+    JwtAuthority = "http://localhost:5000"
 };
 
 builder.Services.Configure<MongoDbSettings>(builder.Configuration.GetSection("MongoDb"));
@@ -103,7 +100,9 @@ builder.Services.Configure<ForwardedHeadersOptions>(options =>
 
 JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
 
-builder.Services.AddAuthentication(options =>
+if (!string.IsNullOrEmpty(appSettings?.JwtAuthority))
+{
+    builder.Services.AddAuthentication(options =>
     {
         options.DefaultScheme = IdentityServerAuthenticationDefaults.AuthenticationScheme;
     })
@@ -113,6 +112,7 @@ builder.Services.AddAuthentication(options =>
         options.ApiName = "estimate-api";
         options.SupportedTokens = SupportedTokens.Jwt;
     });
+}
 
 builder.Services.AddSwagger(appSettings, builder.Configuration);
 
