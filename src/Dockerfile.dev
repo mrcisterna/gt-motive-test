@@ -1,46 +1,40 @@
 # Development Dockerfile
-# Utiliza hot reload y debugging para desarrollo local
 
 FROM mcr.microsoft.com/dotnet/sdk:9.0-noble-amd64
 
 WORKDIR /src
 
-# Disable global.json to avoid SDK version conflicts
-ENV DOTNET_SDK_CHECK=false
-
-# Instalar herramientas de desarrollo
 RUN dotnet tool install -g dotnet-ef
 ENV PATH="/root/.dotnet/tools:${PATH}"
 
-# Copiar archivos de configuración
+COPY ["NuGet.config", "."]
 COPY ["Directory.Build.targets", "."]
 COPY ["Directory.Build.props", "."]
-COPY ["NuGet.config", "."]
 
-# Copiar archivos de proyecto
 COPY ["src/GtMotive.Estimate.Microservice.Domain/GtMotive.Estimate.Microservice.Domain.csproj", "GtMotive.Estimate.Microservice.Domain/"]
 COPY ["src/GtMotive.Estimate.Microservice.ApplicationCore/GtMotive.Estimate.Microservice.ApplicationCore.csproj", "GtMotive.Estimate.Microservice.ApplicationCore/"]
 COPY ["src/GtMotive.Estimate.Microservice.Infrastructure/GtMotive.Estimate.Microservice.Infrastructure.csproj", "GtMotive.Estimate.Microservice.Infrastructure/"]
 COPY ["src/GtMotive.Estimate.Microservice.Api/GtMotive.Estimate.Microservice.Api.csproj", "GtMotive.Estimate.Microservice.Api/"]
 COPY ["src/GtMotive.Estimate.Microservice.Host/GtMotive.Estimate.Microservice.Host.csproj", "GtMotive.Estimate.Microservice.Host/"]
 
-# Restaurar dependencias
 RUN dotnet restore "GtMotive.Estimate.Microservice.Host/GtMotive.Estimate.Microservice.Host.csproj"
 
-# Copiar todo el código
 COPY . .
 
-# Remove global.json to avoid SDK version conflicts in Docker
 RUN rm -f global.json
 
-WORKDIR "/src/src/GtMotive.Estimate.Microservice.Host"
+# Merge src files
+RUN if [ -d src/GtMotive.Estimate.Microservice.Host ] && [ -f src/GtMotive.Estimate.Microservice.Host/Program.cs ]; then \
+    cp -rv src/GtMotive.Estimate.Microservice.Host/* GtMotive.Estimate.Microservice.Host/ && \
+    cp -rv src/GtMotive.Estimate.Microservice.Api/* GtMotive.Estimate.Microservice.Api/ && \
+    cp -rv src/GtMotive.Estimate.Microservice.ApplicationCore/* GtMotive.Estimate.Microservice.ApplicationCore/ && \
+    cp -rv src/GtMotive.Estimate.Microservice.Domain/* GtMotive.Estimate.Microservice.Domain/ && \
+    cp -rv src/GtMotive.Estimate.Microservice.Infrastructure/* GtMotive.Estimate.Microservice.Infrastructure/; \
+fi
 
-# Exponer puertos
-EXPOSE 5000 5001
-
-# Configuración de entorno para desarrollo
+WORKDIR "/src/GtMotive.Estimate.Microservice.Host"
+EXPOSE 5000
 ENV ASPNETCORE_ENVIRONMENT=Development
 ENV ASPNETCORE_URLS=http://+:5000
 
-# Iniciar con watch mode para hot reload
 ENTRYPOINT ["dotnet", "watch", "run"]

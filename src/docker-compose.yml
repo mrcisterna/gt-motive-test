@@ -5,24 +5,15 @@ services:
     build:
       context: ..
       dockerfile: src/GtMotive.Estimate.Microservice.Host/Dockerfile
-    image: vehicle-rental-microservice:latest
-    container_name: vehicle-rental-microservice
+    image: vehicle-rental:latest
+    container_name: vehicle-rental-api
     ports:
       - "5000:80"
-      - "5001:443"
     environment:
-      - ASPNETCORE_ENVIRONMENT=Development
-      - ASPNETCORE_URLS=http://+:80
-    restart: unless-stopped
+      - ASPNETCORE_ENVIRONMENT=Production
     networks:
-      - vehicle-rental-network
-    healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:80/health || exit 1"]
-      interval: 30s
-      timeout: 3s
-      retries: 3
-      start_period: 10s
+      - vehicle-rental
 
 networks:
-  vehicle-rental-network:
+  vehicle-rental:
     driver: bridge

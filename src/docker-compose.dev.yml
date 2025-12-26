@@ -9,14 +9,10 @@ services:
     container_name: vehicle-rental-dev
     ports:
       - "5000:5000"
-      - "5001:5001"
     volumes:
       - ../:/src
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - ASPNETCORE_URLS=http://+:5000
-    stdin_open: true
-    tty: true
     networks:
       - vehicle-rental-dev
 
