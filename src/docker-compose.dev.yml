@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  microservice-dev:
+    build:
+      context: ..
+      dockerfile: src/Dockerfile.dev
+    image: vehicle-rental-dev:latest
+    container_name: vehicle-rental-dev
+    ports:
+      - "5000:5000"
+      - "5001:5001"
+    volumes:
+      - ../:/src
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:5000
+    stdin_open: true
+    tty: true
+    networks:
+      - vehicle-rental-dev
+
+networks:
+  vehicle-rental-dev:
+    driver: bridge

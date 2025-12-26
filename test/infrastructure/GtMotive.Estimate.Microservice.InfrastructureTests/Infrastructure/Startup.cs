@@ -1,5 +1,4 @@
-﻿using System.Reflection;
-using Acheve.AspNetCore.TestHost.Security;
+﻿using Acheve.AspNetCore.TestHost.Security;
 using Acheve.TestHost;
 using GtMotive.Estimate.Microservice.Api;
 using GtMotive.Estimate.Microservice.Infrastructure;
@@ -34,8 +33,6 @@ namespace GtMotive.Estimate.Microservice.InfrastructureTests.Infrastructure
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public static void ConfigureServices(IServiceCollection services)
         {
-            services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(Startup).GetTypeInfo().Assembly));
-
             services.AddAuthentication(TestServerDefaults.AuthenticationScheme)
                 .AddTestServer();
 
@@ -43,6 +40,7 @@ namespace GtMotive.Estimate.Microservice.InfrastructureTests.Infrastructure
                 .WithApiControllers();
 
             services.AddBaseInfrastructure(true);
+            services.AddInMemoryRepositories();
         }
     }
 }

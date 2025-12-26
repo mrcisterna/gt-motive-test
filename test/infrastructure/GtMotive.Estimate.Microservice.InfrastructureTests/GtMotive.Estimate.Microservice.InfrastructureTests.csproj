@@ -8,7 +8,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Acheve.TestHost" />
+        <PackageReference Include="Acheve.TestHost" Version="4.0.0" />
     </ItemGroup>
 
     <ItemGroup>

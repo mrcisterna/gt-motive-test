@@ -9,6 +9,7 @@
     <ItemGroup>
         <PackageReference Include="Microsoft.ApplicationInsights" />
         <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
+        <PackageReference Include="Microsoft.Extensions.Options" />
         <PackageReference Include="MongoDB.Bson" />
         <PackageReference Include="MongoDB.Driver" />
         <PackageReference Include="Polly" />
@@ -16,6 +17,7 @@
 
     <ItemGroup>
         <ProjectReference Include="..\GtMotive.Estimate.Microservice.ApplicationCore\GtMotive.Estimate.Microservice.ApplicationCore.csproj" />
+        <ProjectReference Include="..\GtMotive.Estimate.Microservice.Domain\GtMotive.Estimate.Microservice.Domain.csproj" />
     </ItemGroup>
 
 </Project>
