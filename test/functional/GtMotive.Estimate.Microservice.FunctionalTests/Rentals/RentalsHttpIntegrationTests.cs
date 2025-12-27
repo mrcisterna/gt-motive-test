@@ -7,6 +7,8 @@ using System.Threading.Tasks;
 using GtMotive.Estimate.Microservice.FunctionalTests.Infrastructure;
 using Xunit;
 
+#nullable enable
+
 namespace GtMotive.Estimate.Microservice.FunctionalTests.Rentals
 {
     /// <summary>
@@ -36,7 +38,11 @@ namespace GtMotive.Estimate.Microservice.FunctionalTests.Rentals
 
             var vehicleContent = await vehicleResponse.Content.ReadAsStringAsync();
             using var document = JsonDocument.Parse(vehicleContent);
-            var vehicleId = document.RootElement.GetProperty("vehicleId").GetString();
+
+            // Try to get vehicleId from either camelCase or PascalCase
+            var vehicleId = GetPropertyValue(document.RootElement, "vehicleId", "VehicleId");
+
+            Assert.NotNull(vehicleId);
 
             // Now rent the vehicle
             var rentalsEndpoint = new Uri("/api/rentals", UriKind.Relative);
@@ -105,7 +111,11 @@ namespace GtMotive.Estimate.Microservice.FunctionalTests.Rentals
 
             var vehicleContent = await vehicleResponse.Content.ReadAsStringAsync();
             using var vehicleDoc = JsonDocument.Parse(vehicleContent);
-            var vehicleId = vehicleDoc.RootElement.GetProperty("vehicleId").GetString();
+
+            // Try to get vehicleId from either camelCase or PascalCase
+            var vehicleId = GetPropertyValue(vehicleDoc.RootElement, "vehicleId", "VehicleId");
+
+            Assert.NotNull(vehicleId);
 
             // Rent the vehicle
             var rentalsEndpoint = new Uri("/api/rentals", UriKind.Relative);
@@ -122,7 +132,11 @@ namespace GtMotive.Estimate.Microservice.FunctionalTests.Rentals
 
             var rentalContent = await rentalResponse.Content.ReadAsStringAsync();
             using var rentalDoc = JsonDocument.Parse(rentalContent);
-            var rentalId = rentalDoc.RootElement.GetProperty("rentalId").GetString();
+
+            // Try to get rentalId from either camelCase or PascalCase
+            var rentalId = GetPropertyValue(rentalDoc.RootElement, "rentalId", "RentalId");
+
+            Assert.NotNull(rentalId);
 
             // Return the vehicle
             var returnUri = new Uri($"/api/rentals/{rentalId}/return", UriKind.Relative);
@@ -133,6 +147,18 @@ namespace GtMotive.Estimate.Microservice.FunctionalTests.Rentals
 
             // Assert
             Assert.True(returnResponse.StatusCode is HttpStatusCode.OK or HttpStatusCode.NoContent);
+        }
+
+        private static string? GetPropertyValue(JsonElement element, string camelCaseName, string pascalCaseName)
+        {
+            if (element.TryGetProperty(camelCaseName, out var camelCaseProperty))
+            {
+                return camelCaseProperty.GetString();
+            }
+
+            return element.TryGetProperty(pascalCaseName, out var pascalCaseProperty)
+                ? pascalCaseProperty.GetString()
+                : null;
         }
     }
 }

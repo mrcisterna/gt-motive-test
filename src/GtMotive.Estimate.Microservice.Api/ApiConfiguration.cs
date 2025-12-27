@@ -27,7 +27,9 @@ namespace GtMotive.Estimate.Microservice.Api
         public static void AddApiDependencies(this IServiceCollection services)
         {
             services.AddAuthorization(AuthorizationOptionsExtensions.Configure);
-            services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(ApiConfiguration).GetTypeInfo().Assembly));
+
+            // Register MediatR handlers from ApplicationCore where the command handlers are defined
+            services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(ApplicationConfiguration).GetTypeInfo().Assembly));
             services.AddUseCases();
             services.AddPresenters();
         }

@@ -1,0 +1,19 @@
+FROM mcr.microsoft.com/dotnet/aspnet:9.0.0-noble-amd64 AS base
+WORKDIR /app
+EXPOSE 5000
+EXPOSE 5001
+
+FROM mcr.microsoft.com/dotnet/sdk:9.0-noble-amd64 AS build
+WORKDIR /src
+
+# Copy all project files
+COPY . .
+
+# Restore and build
+RUN dotnet restore "GtMotive.Estimate.Microservice.Host/GtMotive.Estimate.Microservice.Host.csproj" --disable-parallel 2>&1 | tee restore.log
+RUN dotnet publish "GtMotive.Estimate.Microservice.Host/GtMotive.Estimate.Microservice.Host.csproj" -c Release -o /app/publish --no-restore
+
+FROM base AS final
+WORKDIR /app
+COPY --from=build /app/publish .
+ENTRYPOINT ["dotnet", "GtMotive.Estimate.Microservice.Host.dll"]

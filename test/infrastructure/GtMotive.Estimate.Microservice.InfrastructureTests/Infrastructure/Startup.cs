@@ -1,6 +1,8 @@
-﻿using Acheve.AspNetCore.TestHost.Security;
+﻿using System.Linq;
+using Acheve.AspNetCore.TestHost.Security;
 using Acheve.TestHost;
 using GtMotive.Estimate.Microservice.Api;
+using GtMotive.Estimate.Microservice.Api.Formatters;
 using GtMotive.Estimate.Microservice.Infrastructure;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -36,7 +38,21 @@ namespace GtMotive.Estimate.Microservice.InfrastructureTests.Infrastructure
             services.AddAuthentication(TestServerDefaults.AuthenticationScheme)
                 .AddTestServer();
 
-            services.AddControllers()
+            services.AddControllers(options =>
+            {
+                options.Filters.Add<Microservice.Api.Filters.BusinessExceptionFilter>();
+
+                var systemTextJsonFormatter = options.OutputFormatters
+                    .OfType<Microsoft.AspNetCore.Mvc.Formatters.SystemTextJsonOutputFormatter>()
+                    .FirstOrDefault();
+
+                if (systemTextJsonFormatter != null)
+                {
+                    options.OutputFormatters.Remove(systemTextJsonFormatter);
+                    options.OutputFormatters.Add(new CompatibleJsonOutputFormatter(
+                        new System.Text.Json.JsonSerializerOptions()));
+                }
+            })
                 .WithApiControllers();
 
             services.AddBaseInfrastructure(true);

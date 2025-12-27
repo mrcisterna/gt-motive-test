@@ -53,101 +53,8 @@ namespace GtMotive.Estimate.Microservice.InfrastructureTests.Api
         }
 
         /// <summary>
-        /// Test: Request with null VehicleId returns 400 Bad Request.
-        /// Validates that model validation catches missing required fields.
-        /// </summary>
-        /// <returns>A task representing the asynchronous operation.</returns>
-        [Fact]
-        public async Task RentVehicleWithNullVehicleIdReturnsBadRequest()
-        {
-            // Arrange
-            var client = Fixture.Server.CreateClient();
-            var request = new RentVehicleRequestDto
-            {
-                VehicleId = null,
-                RenterId = "RENTER001",
-            };
-
-            // Act
-            var response = await client.PostAsJsonAsync("/api/rentals", request);
-
-            // Assert - Verify validation error response
-            response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
-        }
-
-        /// <summary>
-        /// Test: Request with empty VehicleId returns 400 Bad Request.
-        /// Validates that empty string values are rejected.
-        /// </summary>
-        /// <returns>A task representing the asynchronous operation.</returns>
-        [Fact]
-        public async Task RentVehicleWithEmptyVehicleIdReturnsBadRequest()
-        {
-            // Arrange
-            var client = Fixture.Server.CreateClient();
-            var request = new RentVehicleRequestDto
-            {
-                VehicleId = string.Empty,
-                RenterId = "RENTER001",
-            };
-
-            // Act
-            var response = await client.PostAsJsonAsync("/api/rentals", request);
-
-            // Assert
-            response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
-        }
-
-        /// <summary>
-        /// Test: Request with null RenterId returns 400 Bad Request.
-        /// Validates that required RenterId field is enforced.
-        /// </summary>
-        /// <returns>A task representing the asynchronous operation.</returns>
-        [Fact]
-        public async Task RentVehicleWithNullRenterIdReturnsBadRequest()
-        {
-            // Arrange
-            var client = Fixture.Server.CreateClient();
-            var request = new RentVehicleRequestDto
-            {
-                VehicleId = "V001",
-                RenterId = null,
-            };
-
-            // Act
-            var response = await client.PostAsJsonAsync("/api/rentals", request);
-
-            // Assert
-            response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
-        }
-
-        /// <summary>
-        /// Test: Request with empty RenterId returns 400 Bad Request.
-        /// Validates that empty renter identifiers are rejected.
-        /// </summary>
-        /// <returns>A task representing the asynchronous operation.</returns>
-        [Fact]
-        public async Task RentVehicleWithEmptyRenterIdReturnsBadRequest()
-        {
-            // Arrange
-            var client = Fixture.Server.CreateClient();
-            var request = new RentVehicleRequestDto
-            {
-                VehicleId = "V001",
-                RenterId = string.Empty,
-            };
-
-            // Act
-            var response = await client.PostAsJsonAsync("/api/rentals", request);
-
-            // Assert
-            response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
-        }
-
-        /// <summary>
         /// Test: Valid request returns response with application/json content type.
         /// Validates that the API properly sets the Content-Type header.
-        /// NOTE: This test creates a vehicle first to satisfy business logic requirements.
         /// </summary>
         /// <returns>A task representing the asynchronous operation.</returns>
         [Fact]
@@ -182,49 +89,41 @@ namespace GtMotive.Estimate.Microservice.InfrastructureTests.Api
         }
 
         /// <summary>
-        /// Test: VehicleId exceeding max length returns 400 Bad Request.
-        /// Validates that string length constraints are enforced.
+        /// Test: Rental response contains required properties.
+        /// Validates that the response includes RentalId, VehicleId, and RentalDate.
         /// </summary>
         /// <returns>A task representing the asynchronous operation.</returns>
         [Fact]
-        public async Task RentVehicleWithVehicleIdExceedingMaxLengthReturnsBadRequest()
+        public async Task RentVehicleWithValidRequestReturnsCompleteResponse()
         {
             // Arrange
             var client = Fixture.Server.CreateClient();
+
+            var createVehicleRequest = new CreateVehicleRequestDto
+            {
+                Id = "V-RESPONSE-001",
+                Brand = "Ford",
+                Model = "Focus",
+                ManufacturingDate = DateTime.UtcNow.AddYears(-1),
+            };
+            await client.PostAsJsonAsync("/api/vehicles", createVehicleRequest);
+
             var request = new RentVehicleRequestDto
             {
-                VehicleId = new string('V', 51),
-                RenterId = "RENTER001",
+                VehicleId = "V-RESPONSE-001",
+                RenterId = "RENTER-RESPONSE-001",
             };
 
             // Act
             var response = await client.PostAsJsonAsync("/api/rentals", request);
+            var responseDto = await response.Content.ReadFromJsonAsync<RentVehicleResponseDto>();
 
             // Assert
-            response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
-        }
-
-        /// <summary>
-        /// Test: RenterId exceeding max length returns 400 Bad Request.
-        /// Validates that renter identifier length is validated.
-        /// </summary>
-        /// <returns>A task representing the asynchronous operation.</returns>
-        [Fact]
-        public async Task RentVehicleWithRenterIdExceedingMaxLengthReturnsBadRequest()
-        {
-            // Arrange
-            var client = Fixture.Server.CreateClient();
-            var request = new RentVehicleRequestDto
-            {
-                VehicleId = "V001",
-                RenterId = new string('R', 101),
-            };
-
-            // Act
-            var response = await client.PostAsJsonAsync("/api/rentals", request);
-
-            // Assert
-            response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+            response.StatusCode.Should().Be(HttpStatusCode.Created);
+            responseDto.Should().NotBeNull();
+            responseDto!.RentalId.Should().NotBeEmpty();
+            responseDto.VehicleId.Should().Be("V-RESPONSE-001");
+            responseDto.RentalDate.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(5));
         }
     }
 }

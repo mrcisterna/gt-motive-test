@@ -56,8 +56,11 @@ builder.Services.AddControllers(options =>
     if (systemTextJsonFormatter != null)
     {
         options.OutputFormatters.Remove(systemTextJsonFormatter);
-        options.OutputFormatters.Add(new GtMotive.Estimate.Microservice.Api.Formatters.CompatibleJsonOutputFormatter(
-            new System.Text.Json.JsonSerializerOptions()));
+        var jsonOptions = new System.Text.Json.JsonSerializerOptions
+        {
+            PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase
+        };
+        options.OutputFormatters.Add(new GtMotive.Estimate.Microservice.Api.Formatters.CompatibleJsonOutputFormatter(jsonOptions));
     }
 });
 builder.Services.AddEndpointsApiExplorer();
@@ -76,6 +79,9 @@ builder.Services.AddControllers()
     .WithApiControllers();
 
 builder.Services.AddBaseInfrastructure(builder.Environment.IsDevelopment());
+
+// Register repositories for dependency injection
+builder.Services.AddInMemoryRepositories();
 
 builder.Services.Configure<ForwardedHeadersOptions>(options =>
 {

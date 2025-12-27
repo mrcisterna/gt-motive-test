@@ -1,0 +1,8 @@
+FROM mcr.microsoft.com/dotnet/aspnet:9.0.0-noble-amd64
+WORKDIR /app
+EXPOSE 5000
+EXPOSE 5001
+COPY publish-output .
+ENV ASPNETCORE_ENVIRONMENT=Development
+ENV ASPNETCORE_URLS=http://+:5000
+ENTRYPOINT ["dotnet", "GtMotive.Estimate.Microservice.Host.dll"]

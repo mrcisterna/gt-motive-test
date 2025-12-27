@@ -1,4 +1,5 @@
 ﻿using System;
+using FluentValidation;
 using GtMotive.Estimate.Microservice.Domain;
 using GtMotive.Estimate.Microservice.Domain.Interfaces;
 using Microsoft.AspNetCore.Http;
@@ -17,7 +18,23 @@ namespace GtMotive.Estimate.Microservice.Api.Filters
 
             _appLogger.LogError(context.Exception, "Exception captured in BusinessExceptionFilter.");
 
-            if (context.Exception is DomainException)
+            if (context.Exception is ValidationException validationException)
+            {
+                var problemDetails = new ProblemDetails
+                {
+                    Type = "https://tools.ietf.org/html/rfc7231#section-6.5.1",
+                    Status = StatusCodes.Status400BadRequest,
+                    Title = "Validation Error",
+                    Detail = "One or more validation errors occurred.",
+                    Instance = context.HttpContext.Request.Path,
+                };
+
+                _appLogger.LogWarning("Validation Exception: {status} - {errors}", problemDetails.Status, string.Join("; ", validationException.Errors));
+
+                context.Result = new BadRequestObjectResult(problemDetails);
+                context.Exception = null;
+            }
+            else if (context.Exception is DomainException)
             {
                 var problemDetails = new ProblemDetails
                 {
