@@ -345,3 +345,4 @@ azure-env*.ps1
 azure_env*.ps1
 
 .DS_Store
+/src/publish-output
